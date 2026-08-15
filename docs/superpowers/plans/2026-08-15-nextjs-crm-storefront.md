@@ -360,20 +360,29 @@ git commit -m "Add SVG icon sprite component"
 ## Task 5: Cart context
 
 **Files:**
+- Create: `lib/constants.ts`
 - Create: `app/context/CartContext.tsx`
 
 **Interfaces:**
-- Produces: `CartItem { id: string; name: string; price: number; quantity: number; image?: string }`, `useCart()` hook returning `{ items, addItem(item: Omit<CartItem,"quantity">, quantity?: number), removeItem(id), updateQuantity(id, quantity), clearCart(), total, count, toast: { message: string; actionLabel?: string; onAction?: () => void } | null, dismissToast(), isPanelOpen, openPanel(), closePanel() }`, `FREE_SHIPPING_THRESHOLD` constant. Consumed by every component that touches the cart (Navbar, ProductCard, Cart panel, product detail page, cart page, checkout page).
+- Produces: `FREE_SHIPPING_THRESHOLD` (in `lib/constants.ts`, re-exported from `CartContext.tsx` so existing import sites keep working); `CartItem { id: string; name: string; price: number; quantity: number; image?: string }`, `useCart()` hook returning `{ items, addItem(item: Omit<CartItem,"quantity">, quantity?: number), removeItem(id), updateQuantity(id, quantity), clearCart(), total, count, toast: { message: string; actionLabel?: string; onAction?: () => void } | null, dismissToast(), isPanelOpen, openPanel(), closePanel() }`. Consumed by every component that touches the cart (Navbar, ProductCard, Cart panel, product detail page, cart page, checkout page) and by the server-side checkout route (Task 20), which needs `FREE_SHIPPING_THRESHOLD` too but cannot import it from a `"use client"` file — hence the shared constant lives in a plain `lib/` module, not only in the context file.
 
-- [ ] **Step 1: Create `app/context/CartContext.tsx`**
+- [ ] **Step 1: Create `lib/constants.ts`**
+
+```ts
+export const FREE_SHIPPING_THRESHOLD = 299;
+```
+
+- [ ] **Step 2: Create `app/context/CartContext.tsx`**
 
 ```tsx
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { FREE_SHIPPING_THRESHOLD } from "../../lib/constants";
+
+export { FREE_SHIPPING_THRESHOLD };
 
 const STORAGE_KEY = "htc-israel-cart-v2";
-export const FREE_SHIPPING_THRESHOLD = 299;
 
 export interface CartItem {
   id: string;
@@ -495,10 +504,10 @@ export function useCart() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add app/context/CartContext.tsx
+git add lib/constants.ts app/context/CartContext.tsx
 git commit -m "Add cart context with localStorage persistence"
 ```
 
@@ -2976,7 +2985,8 @@ git commit -m "Build cart page"
 - Create: `.env.local` (from `.env.local.example`, not committed — gitignored)
 
 **Interfaces:**
-- Produces: `stageCheckoutIntent(orderId: string, payload: OrderPayload): Promise<boolean>`, `finalizeOrder(orderId: string): Promise<boolean>` (in `lib/orders.ts`); `POST /api/hyp-checkout` (body `HypCheckoutBody` → `{ paymentUrl }` or `{ error }`); `POST /api/confirm-order` (body `{ orderId }` → `{ ok: boolean }`).
+- Consumes: `getProducts()` (Task 13), `FREE_SHIPPING_THRESHOLD` (Task 5's `lib/constants.ts`).
+- Produces: `stageCheckoutIntent(orderId: string, payload: OrderPayload): Promise<boolean>`, `finalizeOrder(orderId: string): Promise<boolean>` (in `lib/orders.ts`); `POST /api/hyp-checkout` (body `HypCheckoutBody = { coupon?, customer, items: { id, qty }[] }` — no price fields, the route recomputes the total server-side — → `{ paymentUrl, amount }` or `{ error }`); `POST /api/confirm-order` (body `{ orderId }` → `{ ok: boolean }`).
 - Consumed by: checkout page (Task 21), payment success page (Task 22).
 
 This follows the CheckoutIntent pattern used by `xvape` (`xvape/lib/orders.ts`, `xvape/app/api/hyp-checkout/route.ts`) rather than writing directly to `Order` on checkout: the full order is staged in the CRM keyed by a generated order id *before* the customer is sent to pay, and only turned into a real, paid `Order` once Hyp redirects the customer back to `/payment/success` with that same id. An abandoned checkout just leaves an unconsumed intent — never a stuck "pending" order in the CRM.
@@ -3058,23 +3068,20 @@ export async function finalizeOrder(orderId: string): Promise<boolean> {
 
 - [ ] **Step 2: Create `app/api/hyp-checkout/route.ts`**
 
-Ported from `xvape/app/api/hyp-checkout/route.ts`, with the order-id prefix changed from `XV-` to `HT-` and the default site URL changed to port 3004:
+Pattern ported from `xvape/app/api/hyp-checkout/route.ts` (order-id prefix `XV-` → `HT-`, default site URL → port 3004), but with one deliberate deviation from that reference: xvape's route trusts a client-supplied `amount` verbatim. This plan's Global Constraints (and `adding-new-sites.md` §7) require the total to be **recomputed server-side from CRM product data**, so this route ignores any price/amount the client sends and rebuilds the order from `getProducts()` plus a server-side coupon re-validation — the client only supplies item ids/quantities and a customer/coupon code:
 
 ```ts
 import { NextRequest, NextResponse } from "next/server";
 import { stageCheckoutIntent } from "../../../lib/orders";
+import { getProducts } from "../../../lib/products";
+import { FREE_SHIPPING_THRESHOLD } from "../../../lib/constants";
 
 export interface CheckoutItem {
   id: string;
-  name: string;
-  price: number;
   qty: number;
 }
 
 export interface HypCheckoutBody {
-  amount: number;
-  shipping?: number;
-  discount?: number;
   coupon?: string;
   customer?: {
     firstName: string;
@@ -3091,6 +3098,29 @@ export interface HypCheckoutBody {
   items?: CheckoutItem[];
 }
 
+interface CouponValidation {
+  ok: boolean;
+  type?: string;
+  value?: number;
+  code?: string;
+  error?: string;
+}
+
+async function validateCouponServerSide(code: string): Promise<CouponValidation> {
+  try {
+    const res = await fetch(`${process.env.CRM_URL}/api/${process.env.CRM_SITE_SLUG}/validate-coupon`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, error: data.error ?? "קוד קופון לא תקין" };
+    return { ok: true, ...data };
+  } catch {
+    return { ok: false, error: "שגיאה באימות הקופון" };
+  }
+}
+
 export async function POST(req: NextRequest) {
   const masof = process.env.HYP_MASOF;
   const key = process.env.HYP_KEY;
@@ -3105,16 +3135,58 @@ export async function POST(req: NextRequest) {
   }
 
   const body: HypCheckoutBody = await req.json();
-  const { amount, shipping = 0, discount = 0, coupon, customer, items } = body;
+  const { coupon, customer, items } = body;
 
   if (!customer || !items?.length) {
     return NextResponse.json({ error: "Missing customer or items" }, { status: 400 });
   }
 
+  // Recompute the order total server-side from CRM product data — never
+  // trust a client-supplied price or amount.
+  const products = await getProducts();
+  const priceById = new Map(products.map((p) => [p.id, p.price]));
+  const nameById = new Map(products.map((p) => [p.id, p.name]));
+
+  let subtotal = 0;
+  const orderItems: { id: string; name: string; price: number; qty: number }[] = [];
+  for (const item of items) {
+    const price = priceById.get(item.id);
+    const qty = Math.max(1, Math.floor(item.qty));
+    if (price === undefined) {
+      return NextResponse.json({ error: `Unknown item: ${item.id}` }, { status: 400 });
+    }
+    subtotal += price * qty;
+    orderItems.push({ id: item.id, name: nameById.get(item.id) ?? item.id, price, qty });
+  }
+
+  let discount = 0;
+  let couponCode: string | undefined;
+  if (coupon) {
+    const result = await validateCouponServerSide(coupon);
+    if (!result.ok || !result.type || result.value === undefined) {
+      return NextResponse.json({ error: result.error ?? "קוד קופון לא תקין" }, { status: 400 });
+    }
+    discount =
+      result.type === "PERCENT"
+        ? Math.round(((subtotal * result.value) / 100) * 100) / 100
+        : Math.min(result.value, subtotal);
+    couponCode = result.code;
+  }
+
+  const shipping = subtotal === 0 || subtotal - discount >= FREE_SHIPPING_THRESHOLD ? 0 : 29;
+  const amount = Math.max(0, subtotal - discount) + shipping;
+
   // Generated server-side — never trust a client-supplied order id.
   const orderId = `HT-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
 
-  const staged = await stageCheckoutIntent(orderId, { total: amount, shipping, discount, coupon, customer, items });
+  const staged = await stageCheckoutIntent(orderId, {
+    total: amount,
+    shipping,
+    discount,
+    coupon: couponCode,
+    customer,
+    items: orderItems,
+  });
   if (!staged) {
     return NextResponse.json({ error: "Could not save order. Please try again." }, { status: 502 });
   }
@@ -3150,7 +3222,7 @@ export async function POST(req: NextRequest) {
   }
 
   const paymentUrl = `https://pay.hyp.co.il/p/?${signedParams}`;
-  return NextResponse.json({ paymentUrl });
+  return NextResponse.json({ paymentUrl, amount });
 }
 ```
 
@@ -3323,16 +3395,16 @@ export default function CheckoutPage() {
     setError(null);
     try {
       const fullAddress = `${form.street} ${form.houseNumber}${form.apartment ? ` דירה ${form.apartment}` : ""}`;
+      // No price/amount fields here — /api/hyp-checkout recomputes the
+      // total server-side from CRM product data (Task 20). finalTotal above
+      // is display-only, for the summary the customer sees before paying.
       const res = await fetch("/api/hyp-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: finalTotal,
-          shipping,
-          discount,
           coupon: appliedCoupon?.code,
           customer: { ...form, address: fullAddress },
-          items: items.map((i) => ({ id: i.id, name: i.name, price: i.price, qty: i.quantity })),
+          items: items.map((i) => ({ id: i.id, qty: i.quantity })),
         }),
       });
       const data = await res.json();
