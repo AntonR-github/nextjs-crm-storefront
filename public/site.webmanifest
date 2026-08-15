@@ -1,0 +1,11 @@
+{
+  "name": "HTC ישראל",
+  "short_name": "HTC",
+  "description": "מכונות תספורת, טרימרים ומכונות גילוח עם אחריות ושירות בישראל.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11110f",
+  "theme_color": "#11110f"
+}
