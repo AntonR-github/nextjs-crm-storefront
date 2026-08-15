@@ -1,0 +1,60 @@
+import { products as fallbackProducts, type StoreProduct } from "./products-data";
+import { categories as fallbackCategories, type Category } from "./categories";
+
+const CRM_URL = process.env.CRM_URL!;
+const SITE_SLUG = process.env.CRM_SITE_SLUG!;
+
+interface CrmProduct {
+  id: string;
+  handle: string;
+  name: string;
+  price: number;
+  badge?: string | null;
+  image?: string | null;
+  images?: string[];
+  cardFeatures?: string[];
+  category?: { id: string; name: string; slug: string } | null;
+  categoryOrder?: number;
+  gtin?: string | null;
+}
+
+export async function getProducts(): Promise<StoreProduct[]> {
+  try {
+    const res = await fetch(`${CRM_URL}/api/${SITE_SLUG}/products`, { next: { revalidate: 60 } });
+    if (!res.ok) return fallbackProducts;
+    const data: CrmProduct[] = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return fallbackProducts;
+    return data.map((p) => ({
+      id: p.id,
+      handle: p.handle,
+      name: p.name,
+      price: p.price,
+      badge: p.badge ?? undefined,
+      image: p.image ?? p.images?.[0] ?? "",
+      images: p.images ?? (p.image ? [p.image] : []),
+      cardFeatures: p.cardFeatures ?? [],
+      category: p.category ?? fallbackCategories[0],
+      categoryOrder: p.categoryOrder ?? 0,
+      gtin: p.gtin ?? "",
+    }));
+  } catch {
+    return fallbackProducts;
+  }
+}
+
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const res = await fetch(`${CRM_URL}/api/${SITE_SLUG}/categories`, { next: { revalidate: 60 } });
+    if (!res.ok) return fallbackCategories;
+    const data: Category[] = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return fallbackCategories;
+    return data;
+  } catch {
+    return fallbackCategories;
+  }
+}
+
+export async function getProductByHandle(handle: string): Promise<StoreProduct | undefined> {
+  const products = await getProducts();
+  return products.find((p) => p.handle === handle);
+}
