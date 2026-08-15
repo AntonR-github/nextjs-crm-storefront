@@ -1,3 +1,3 @@
 export default function HomePage() {
-  return <main>HTC ישראל</main>;
+  return <main id="main">HTC ישראל</main>;
 }
