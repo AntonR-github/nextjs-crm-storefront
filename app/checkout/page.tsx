@@ -16,7 +16,6 @@ interface CouponResult {
 
 export default function CheckoutPage() {
   const { items, total } = useCart();
-  const shipping = total === 0 || total >= FREE_SHIPPING_THRESHOLD ? 0 : 29;
 
   const [step, setStep] = useState<Step>("shipping");
   const [submitted, setSubmitted] = useState(false);
@@ -33,7 +32,10 @@ export default function CheckoutPage() {
       ? Math.round(((total * appliedCoupon.value) / 100) * 100) / 100
       : Math.min(appliedCoupon.value, total)
     : 0;
-  const finalTotal = Math.max(0, total - discount) + shipping;
+  // Shipping is calculated from post-discount subtotal to match server-side logic (/api/hyp-checkout)
+  const subtotalAfterDiscount = Math.max(0, total - discount);
+  const shipping = subtotalAfterDiscount === 0 || subtotalAfterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : 29;
+  const finalTotal = subtotalAfterDiscount + shipping;
 
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", phone: "",
