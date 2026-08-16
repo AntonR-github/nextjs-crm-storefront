@@ -78,10 +78,13 @@ export async function POST(req: NextRequest) {
   const orderItems: { id: string; name: string; price: number; qty: number }[] = [];
   for (const item of items) {
     const price = priceById.get(item.id);
-    const qty = Math.max(1, Math.floor(item.qty));
     if (price === undefined) {
       return NextResponse.json({ error: `Unknown item: ${item.id}` }, { status: 400 });
     }
+    if (!Number.isFinite(item.qty)) {
+      return NextResponse.json({ error: `Invalid quantity for item: ${item.id}` }, { status: 400 });
+    }
+    const qty = Math.max(1, Math.floor(item.qty));
     subtotal += price * qty;
     orderItems.push({ id: item.id, name: nameById.get(item.id) ?? item.id, price, qty });
   }
