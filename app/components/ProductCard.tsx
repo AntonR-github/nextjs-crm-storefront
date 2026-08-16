@@ -20,7 +20,7 @@ export default function ProductCard({ product, featured = false }: { product: St
       </div>
       <div className="product-card__body">
         <div>
-          <small>{product.id.toUpperCase()} · {product.category.name}</small>
+          <small>{product.handle.toUpperCase()} · {product.category.name}</small>
           <h3>{product.name}</h3>
           <p className="product-card__features">{product.cardFeatures.join(" · ")}</p>
         </div>

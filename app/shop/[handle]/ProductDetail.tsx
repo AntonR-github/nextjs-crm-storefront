@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "../../context/CartContext";
 import { WARRANTY_FAQ_ANSWER, type ProductContent } from "../../../lib/product-content";
 import type { StoreProduct } from "../../../lib/products-data";
+import { FREE_SHIPPING_THRESHOLD } from "../../../lib/constants";
 
 const noteIcons = [
   <svg key="0" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 17h6"/></svg>,
@@ -77,7 +78,7 @@ export default function ProductDetail({
           <h1>{product.name}</h1>
           <h2>{content.subtitle}</h2>
           <div className="product-meta">
-            <span>דגם / מק״ט: {product.id.toUpperCase()}</span>
+            <span>דגם / מק״ט: {product.handle.toUpperCase()}</span>
             <span>ברקוד: {product.gtin}</span>
           </div>
           <p>{content.description}</p>
@@ -91,7 +92,7 @@ export default function ProductDetail({
               <small>מחיר השקה · <del>₪{content.compareAtPrice}</del></small>
               <strong>₪{product.price}</strong>
               <em>חיסכון ₪{savings}</em>
-              <p>המחיר כולל מע״מ · משלוח חינם בקנייה מעל ₪299</p>
+              <p>המחיר כולל מע״מ · משלוח חינם בקנייה מעל ₪{FREE_SHIPPING_THRESHOLD}</p>
             </span>
           </div>
           <div className="product-quantity">
@@ -146,7 +147,7 @@ export default function ProductDetail({
             <p className="kicker">המפרט החשוב. בלי רעש.</p>
             <h2 id="productSpecTitle">כל הנתונים<br />במבט אחד.</h2>
             <p>מידע ברור בעברית שיעזור לכם לדעת בדיוק מה מקבלים.</p>
-            <span>{product.name} · {product.id.toUpperCase().replace("-", "‑")}</span>
+            <span>{product.name} · {product.handle.toUpperCase().replace("-", "‑")}</span>
             <small className="spec-verification">נבדק מול מסמכי הספק ותכולת האריזה</small>
           </div>
           <dl className="product-spec-grid">
@@ -161,7 +162,7 @@ export default function ProductDetail({
         </div>
       </section>
 
-      <section className="product-story shell" data-model={product.id.toUpperCase()}>
+      <section className="product-story shell" data-model={product.handle.toUpperCase()}>
         <div className="product-story__image">
           <img src={gallery[2] ?? gallery[1] ?? gallery[0]} alt={`${product.name} בסביבת מספרה מקצועית`} />
         </div>

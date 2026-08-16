@@ -39,6 +39,7 @@ async function validateCouponServerSide(code: string): Promise<CouponValidation>
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
+      signal: AbortSignal.timeout(8000),
     });
     const data = await res.json();
     if (!res.ok) return { ok: false, error: data.error ?? "קוד קופון לא תקין" };
@@ -64,7 +65,14 @@ export async function POST(req: NextRequest) {
   const body: HypCheckoutBody = await req.json();
   const { coupon, customer, items } = body;
 
-  if (!customer || !items?.length) {
+  if (
+    !customer ||
+    !items?.length ||
+    typeof customer.email !== "string" || !customer.email.trim() ||
+    typeof customer.firstName !== "string" || !customer.firstName.trim() ||
+    typeof customer.lastName !== "string" || !customer.lastName.trim() ||
+    typeof customer.phone !== "string" || !customer.phone.trim()
+  ) {
     return NextResponse.json({ error: "Missing customer or items" }, { status: 400 });
   }
 
@@ -140,7 +148,9 @@ export async function POST(req: NextRequest) {
 
   let signedParams: string;
   try {
-    const resp = await fetch(`https://pay.hyp.co.il/p/?${params.toString()}`);
+    const resp = await fetch(`https://pay.hyp.co.il/p/?${params.toString()}`, {
+      signal: AbortSignal.timeout(10000),
+    });
     signedParams = await resp.text();
   } catch (err) {
     console.error("Hyp APISign request failed:", err);
@@ -148,7 +158,8 @@ export async function POST(req: NextRequest) {
   }
 
   if (signedParams.includes("CCode=") && !signedParams.includes("action=pay")) {
-    return NextResponse.json({ error: "Hyp Pay returned an error", details: signedParams }, { status: 400 });
+    console.error("Hyp APISign returned an error:", signedParams);
+    return NextResponse.json({ error: "Hyp Pay returned an error" }, { status: 400 });
   }
 
   const paymentUrl = `https://pay.hyp.co.il/p/?${signedParams}`;

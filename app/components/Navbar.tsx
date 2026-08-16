@@ -38,7 +38,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              aria-current={pathname === link.href ? "page" : undefined}
+              aria-current={!link.href.includes("#") && pathname === link.href ? "page" : undefined}
               onClick={() => setMenuOpen(false)}
             >
               {link.label}

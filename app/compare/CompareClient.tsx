@@ -47,7 +47,7 @@ const MAX_SELECTED = 4;
 export default function CompareClient({ products }: { products: StoreProduct[] }) {
   const models: CompareModel[] = products
     .map((product) => {
-      const code = product.id.toUpperCase();
+      const code = product.handle.toUpperCase();
       const copy = MODEL_COPY[code];
       if (!copy) return null;
       return { code, handle: product.handle, name: product.name, image: product.image, ...copy };

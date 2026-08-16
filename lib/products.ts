@@ -25,6 +25,7 @@ export async function getProducts(): Promise<StoreProduct[]> {
     const data: CrmProduct[] = await res.json();
     if (!Array.isArray(data) || data.length === 0) return fallbackProducts;
     return data.map((p) => ({
+      // id is the CRM's database cuid (internal only); handle is the human-readable SKU — never use id as a display SKU.
       id: p.id,
       handle: p.handle,
       name: p.name,

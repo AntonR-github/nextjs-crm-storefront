@@ -136,7 +136,7 @@ export default function CheckoutPage() {
                 <button type="button" className={step === "shipping" ? "is-active" : undefined} onClick={() => setStep("shipping")}>
                   פרטי משלוח
                 </button>
-                <button type="button" className={step === "payment" ? "is-active" : undefined} disabled={!isShippingValid}>
+                <button type="button" className={step === "payment" ? "is-active" : undefined} disabled={!isShippingValid} onClick={() => setStep("payment")}>
                   תשלום
                 </button>
               </div>
