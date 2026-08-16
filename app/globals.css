@@ -4187,3 +4187,19 @@ section[id]{scroll-margin-top:110px}
 .checkout-page__recap-row{display:flex;justify-content:space-between;color:var(--muted)}
 .checkout-page__recap-row b{color:var(--ink);font-weight:600}
 @media(max-width:900px){.checkout-page__grid{grid-template-columns:1fr}.checkout-page__row{grid-template-columns:1fr}}
+
+/* Payment result pages (new) */
+.payment-result{padding:80px 0;display:flex;justify-content:center}
+.payment-result__card{max-width:440px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px;padding:0 20px}
+.payment-result__icon{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.payment-result__icon svg{width:40px;height:40px;stroke:#fff;stroke-width:2}
+.payment-result__icon--success{background:#347247}
+.payment-result__icon--failure{background:#c0392b}
+.payment-result__card h1{font-size:28px;margin:0}
+.payment-result__card p{color:var(--muted);margin:0}
+.payment-result__summary{width:100%;background:var(--cream);padding:16px 20px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.payment-result__summary>div{display:flex;justify-content:space-between}
+.payment-result__actions{display:flex;gap:12px;width:100%}
+.payment-result__actions .button{flex:1;justify-content:center}
+.payment-result .button--ghost{border-color:var(--line);color:var(--ink)}
+.payment-result__help{font-size:13px;color:var(--muted)}
