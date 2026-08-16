@@ -20,7 +20,7 @@ interface CrmProduct {
 
 export async function getProducts(): Promise<StoreProduct[]> {
   try {
-    const res = await fetch(`${CRM_URL}/api/${SITE_SLUG}/products`, { next: { revalidate: 60 } });
+    const res = await fetch(`${CRM_URL}/api/${SITE_SLUG}/products`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
     if (!res.ok) return fallbackProducts;
     const data: CrmProduct[] = await res.json();
     if (!Array.isArray(data) || data.length === 0) return fallbackProducts;
@@ -44,7 +44,7 @@ export async function getProducts(): Promise<StoreProduct[]> {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const res = await fetch(`${CRM_URL}/api/${SITE_SLUG}/categories`, { next: { revalidate: 60 } });
+    const res = await fetch(`${CRM_URL}/api/${SITE_SLUG}/categories`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
     if (!res.ok) return fallbackCategories;
     const data: Category[] = await res.json();
     if (!Array.isArray(data) || data.length === 0) return fallbackCategories;
