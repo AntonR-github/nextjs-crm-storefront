@@ -14,19 +14,16 @@ export default function ContactForm() {
     event.preventDefault();
     setStatus("sending");
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_CRM_URL}/api/${process.env.NEXT_PUBLIC_CRM_SITE_SLUG}/submit`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: form.name,
-            email: form.email,
-            phone: form.phone,
-            message: `[${form.subject}] ${form.message}`,
-          }),
-        }
-      );
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          message: `[${form.subject}] ${form.message}`,
+        }),
+      });
       setStatus(res.ok ? "sent" : "error");
     } catch {
       setStatus("error");
