@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 import { CartProvider } from "./context/CartContext";
 import IconSprite from "./components/IconSprite";
@@ -26,10 +27,19 @@ export const viewport: Viewport = {
   themeColor: "#11110f",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+// Kept in sync with middleware.ts's bodyClass assignments. Defense-in-depth
+// only — middleware already strips any client-supplied header — but this
+// guarantees className can never carry anything except one of these exact,
+// known-safe strings.
+const ALLOWED_BODY_CLASSES = new Set(["compare-page compare-page--refined", "shop-page", "product-template"]);
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const requestedClass = (await headers()).get("x-body-class") ?? "";
+  const bodyClass = ALLOWED_BODY_CLASSES.has(requestedClass) ? requestedClass : "";
+
   return (
     <html lang="he" dir="rtl">
-      <body>
+      <body className={bodyClass || undefined}>
         <a className="skip-link" href="#main">דלגו לתוכן</a>
         <CartProvider>
           {children}

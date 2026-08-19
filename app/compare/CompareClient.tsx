@@ -44,12 +44,18 @@ const presets: Record<string, string[]> = {
 
 const MAX_SELECTED = 4;
 
+// Fixed display order for this page specifically — matches the original
+// static compare.html's hand-arranged sequence, which differs from the
+// homepage/shop grid order and from whatever order the CRM returns.
+const CODE_ORDER = ["AT-799", "AT-735", "AT-599", "AT-570", "GT-667", "AT-158"];
+
 export default function CompareClient({ products }: { products: StoreProduct[] }) {
-  const models: CompareModel[] = products
-    .map((product) => {
-      const code = product.handle.toUpperCase();
+  const productByCode = new Map(products.map((product) => [product.handle.toUpperCase(), product]));
+  const models: CompareModel[] = CODE_ORDER
+    .map((code) => {
+      const product = productByCode.get(code);
       const copy = MODEL_COPY[code];
-      if (!copy) return null;
+      if (!product || !copy) return null;
       return { code, handle: product.handle, name: product.name, image: product.image, ...copy };
     })
     .filter((m): m is CompareModel => m !== null);
@@ -116,11 +122,11 @@ export default function CompareClient({ products }: { products: StoreProduct[] }
               <article key={model.code} className={isSelected ? "is-selected" : undefined}>
                 <div className="compare-card__visual">
                   {model.badge && <span className="compare-card__badge">{model.badge}</span>}
-                  <img src={model.image} loading="lazy" decoding="async" alt={model.name} />
+                  <img src={model.image} loading="lazy" decoding="async" alt={`HTC ${model.shortLabel}`} />
                 </div>
                 <div className="compare-card__body">
                   <small>{model.small}</small>
-                  <h3>{model.name}</h3>
+                  <h3>HTC {model.shortLabel}</h3>
                   <p>{model.summary}</p>
                   <ul>{model.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
                 </div>
