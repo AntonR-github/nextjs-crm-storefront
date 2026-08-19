@@ -46,7 +46,8 @@ export default function CheckoutPage() {
 
   const isShippingValid =
     form.firstName.trim() && form.lastName.trim() && form.email.trim() &&
-    form.phone.trim() && form.street.trim() && form.houseNumber.trim() && form.city.trim();
+    form.phone.trim() && form.street.trim() && form.houseNumber.trim() &&
+    form.apartment.trim() && form.city.trim();
 
   const handleContinue = () => {
     setSubmitted(true);
@@ -179,8 +180,9 @@ export default function CheckoutPage() {
                       {submitted && !form.houseNumber.trim() && <p className="checkout-page__error">שדה חובה</p>}
                     </div>
                     <div className="checkout-page__field">
-                      <label>דירה (אופציונלי)</label>
+                      <label>דירה</label>
                       <input value={form.apartment} onChange={(e) => set("apartment")(e.target.value)} />
+                      {submitted && !form.apartment.trim() && <p className="checkout-page__error">שדה חובה</p>}
                     </div>
                   </div>
                   <div className="checkout-page__field">
