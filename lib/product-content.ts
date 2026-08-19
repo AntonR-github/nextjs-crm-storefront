@@ -14,8 +14,11 @@ export interface ProductContent {
   };
 }
 
+// Keyed by SKU (StoreProduct.gtin) rather than handle — CRM-generated
+// handles come from the Hebrew product name and don't match the old
+// static-site handles below, but the SKU barcode is stable across both.
 export const productContent: Record<string, ProductContent> = {
-  "at-799": {
+  "6971864102077": {
     subtitle: "מכונת תספורת מקצועית עם מסך LCD",
     description: "מנוע ללא פחמים במהירות 9,000 סל״ד, להב קבוע בציפוי DLC ועד 360 דקות עבודה.",
     compareAtPrice: 399,
@@ -45,7 +48,7 @@ export const productContent: Record<string, ProductContent> = {
       ],
     },
   },
-  "at-735": {
+  "6971864102039": {
     subtitle: "מכונת תספורת מקצועית בגוף מתכת מלא",
     description: "שתי מהירויות של 7,000 ו־8,000 סל״ד, סוללת 3,000mAh, מסך LCD ועד 240 דקות עבודה.",
     compareAtPrice: 329,
@@ -75,7 +78,7 @@ export const productContent: Record<string, ProductContent> = {
       ],
     },
   },
-  "at-599": {
+  "6971864102084": {
     subtitle: "טרימר מדויק לזקן ולקווי מתאר",
     description: "להב T חד, מערכת חיתוך קרמית, מסך LCD ועד 200 דקות עבודה.",
     compareAtPrice: 239,
@@ -105,7 +108,7 @@ export const productContent: Record<string, ProductContent> = {
       ],
     },
   },
-  "at-570": {
+  "6971864100592": {
     subtitle: "טרימר גימור עם 3 מסרקי הגבהה",
     description: "להב T לעבודת קווים וגימור, שלושה מסרקים ובסיס אחסון כלול.",
     compareAtPrice: 179,
@@ -135,7 +138,7 @@ export const productContent: Record<string, ProductContent> = {
       ],
     },
   },
-  "gt-667": {
+  "6971864103166": {
     subtitle: "מגלח חשמלי עם 2 ראשי גילוח",
     description: "מערכת גילוח כפולה לגימור קרוב וניקוי קווי פנים וצוואר.",
     compareAtPrice: 199,
@@ -165,7 +168,7 @@ export const productContent: Record<string, ProductContent> = {
       ],
     },
   },
-  "at-158": {
+  "6971864101933": {
     subtitle: "מכונת תספורת ביתית למשפחה",
     description: "טבעת כיוון אורך, מסך דיגיטלי וארבעה מסרקי הגבהה לשימוש ביתי נוח.",
     compareAtPrice: 159,

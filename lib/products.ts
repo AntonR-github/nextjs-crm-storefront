@@ -16,6 +16,7 @@ interface CrmProduct {
   category?: { id: string; name: string; slug: string } | null;
   categoryOrder?: number;
   gtin?: string | null;
+  payperSku?: string | null;
 }
 
 export async function getProducts(): Promise<StoreProduct[]> {
@@ -36,7 +37,10 @@ export async function getProducts(): Promise<StoreProduct[]> {
       cardFeatures: p.cardFeatures ?? [],
       category: p.category ?? fallbackCategories[0],
       categoryOrder: p.categoryOrder ?? 0,
-      gtin: p.gtin ?? "",
+      // gtin doubles as the key into lib/product-content.ts's local editorial
+      // data — CRM never sets gtin for Payper-synced products, only
+      // payperSku (same barcode number), so fall back to that.
+      gtin: p.gtin ?? p.payperSku ?? "",
     }));
   } catch {
     return fallbackProducts;

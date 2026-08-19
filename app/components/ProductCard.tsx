@@ -7,7 +7,7 @@ import type { StoreProduct } from "../../lib/products-data";
 
 export default function ProductCard({ product, featured = false }: { product: StoreProduct; featured?: boolean }) {
   const { addItem } = useCart();
-  const content = productContent[product.handle];
+  const content = productContent[product.gtin];
   const compareAtPrice = content?.compareAtPrice;
   const discount = compareAtPrice ? Math.round(((compareAtPrice - product.price) / compareAtPrice) * 100) : 0;
   const savings = compareAtPrice ? compareAtPrice - product.price : 0;
